@@ -15,14 +15,13 @@
     #loginSection { max-width: 400px; margin: 0 auto 20px; }
     #btnLogout { margin-top: 15px; background: #f44336; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; display:none; }
   </style>
-  <!-- Firebase SDK (modular compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
-  <!-- Bagian Login -->
+  <!-- Login Section -->
   <div id="loginSection">
     <h2>Login Admin</h2>
     <input type="email" id="email" placeholder="Email" />
@@ -31,7 +30,9 @@
     <p id="loginError" style="color:red;"></p>
   </div>
 
-  <h1 id="dashboardTitle" style="display:none;">Admin Dashboard - Kelola Berita</h1>
+  <h1 id="dashboardTitle" style="display:none;">Admin Dashboard - BOLA ID UPDATE</h1>
+
+  <!-- Berita Section -->
   <form id="formTambahBerita" style="display:none;">
     <h3 id="formTitle">Tambah Berita Baru</h3>
     <input type="text" id="judul" placeholder="Judul" required />
@@ -54,24 +55,42 @@
     <tbody></tbody>
   </table>
 
+  <!-- Klasemen Section -->
+  <h3 id="klasemenTitle" style="display:none;">Kelola Klasemen Liga</h3>
+  <form id="formTambahKlasemen" style="display:none;">
+    <input type="text" id="klub" placeholder="Nama Klub" required />
+    <input type="number" id="main" placeholder="Main" required />
+    <input type="number" id="menang" placeholder="Menang" required />
+    <input type="number" id="seri" placeholder="Seri" required />
+    <input type="number" id="kalah" placeholder="Kalah" required />
+    <input type="number" id="poin" placeholder="Poin" required />
+    <button type="submit">Simpan Klasemen</button>
+  </form>
+
+  <table id="tabelKlasemen" style="display:none;">
+    <thead>
+      <tr>
+        <th>Klub</th><th>Main</th><th>Menang</th><th>Seri</th><th>Kalah</th><th>Poin</th><th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
   <button id="btnLogout">Logout</button>
 
   <script>
-    // Firebase config dan init
     const firebaseConfig = {
       apiKey: "AIzaSyCm3bqo01GU4EnYDnUjy7rhzkY3teHMNpY",
       authDomain: "sarjanabola-980e4.firebaseapp.com",
       projectId: "sarjanabola-980e4",
       storageBucket: "sarjanabola-980e4.appspot.com",
       messagingSenderId: "834425792870",
-      appId: "1:834425792870:web:e865ba0a526d20f06e40a7",
-      measurementId: "G-Q36V68S5NM"
+      appId: "1:834425792870:web:e865ba0a526d20f06e40a7"
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // DOM elements
     const loginSection = document.getElementById('loginSection');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
@@ -83,24 +102,31 @@
     const formTitle = document.getElementById('formTitle');
     const btnSubmit = document.getElementById('btnSubmit');
     const btnCancelEdit = document.getElementById('btnCancelEdit');
-
     const judulInput = document.getElementById('judul');
     const tanggalInput = document.getElementById('tanggal');
     const gambarInput = document.getElementById('gambar');
     const isiInput = document.getElementById('isi');
-
     const daftarBeritaTitle = document.getElementById('daftarBeritaTitle');
     const tabelBerita = document.getElementById('tabelBerita');
     const tabelBody = tabelBerita.querySelector('tbody');
     const btnLogout = document.getElementById('btnLogout');
 
+    const klasemenForm = document.getElementById('formTambahKlasemen');
+    const klasemenTable = document.getElementById('tabelKlasemen');
+    const klasemenBody = klasemenTable.querySelector('tbody');
+    const klubInput = document.getElementById('klub');
+    const mainInput = document.getElementById('main');
+    const menangInput = document.getElementById('menang');
+    const seriInput = document.getElementById('seri');
+    const kalahInput = document.getElementById('kalah');
+    const poinInput = document.getElementById('poin');
+
     let editId = null;
 
-    // Render daftar berita dengan tombol edit dan hapus
     function renderBerita() {
       tabelBody.innerHTML = '';
-      db.collection("berita").orderBy("tanggal", "desc").get().then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
+      db.collection("berita").orderBy("tanggal", "desc").get().then(snapshot => {
+        snapshot.forEach(doc => {
           const berita = doc.data();
           const row = document.createElement('tr');
           row.innerHTML = `
@@ -109,46 +135,34 @@
             <td>
               <button onclick="editBerita('${doc.id}')">Edit</button>
               <button onclick="hapusBerita('${doc.id}')">Hapus</button>
-            </td>
-          `;
+            </td>`;
           tabelBody.appendChild(row);
         });
       });
     }
 
-    // Fungsi hapus berita
     window.hapusBerita = function(id) {
       if(confirm('Yakin ingin menghapus berita ini?')) {
-        db.collection("berita").doc(id).delete().then(() => {
-          alert('Berita dihapus.');
-          renderBerita();
-        }).catch(err => alert('Gagal menghapus berita: ' + err));
+        db.collection("berita").doc(id).delete().then(renderBerita);
       }
     }
 
-    // Fungsi edit berita
     window.editBerita = function(id) {
       db.collection("berita").doc(id).get().then(doc => {
-        if (!doc.exists) {
-          alert('Berita tidak ditemukan!');
-          return;
-        }
+        if (!doc.exists) return alert('Berita tidak ditemukan!');
         const data = doc.data();
         editId = id;
         formTitle.textContent = 'Edit Berita';
         btnSubmit.textContent = 'Update Berita';
         btnCancelEdit.style.display = 'inline-block';
-
         judulInput.value = data.judul;
         tanggalInput.value = data.tanggal;
         gambarInput.value = data.gambar || '';
         isiInput.value = data.isi;
-
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     }
 
-    // Batal edit
     btnCancelEdit.addEventListener('click', () => {
       editId = null;
       formTitle.textContent = 'Tambah Berita Baru';
@@ -157,113 +171,89 @@
       form.reset();
     });
 
-    // Submit form tambah/edit berita
     form.addEventListener('submit', e => {
       e.preventDefault();
       const judul = judulInput.value.trim();
       const tanggal = tanggalInput.value;
       const gambar = gambarInput.value.trim();
       const isi = isiInput.value.trim();
-
-      if (!judul || !tanggal || !isi) {
-        alert('Judul, tanggal dan isi wajib diisi!');
-        return;
-      }
+      if (!judul || !tanggal || !isi) return alert('Harap isi semua field berita!');
 
       if (editId) {
-        // update berita
-        db.collection("berita").doc(editId).update({ judul, tanggal, gambar, isi })
-          .then(() => {
-            alert('Berita berhasil diperbarui!');
-            form.reset();
-            editId = null;
-            formTitle.textContent = 'Tambah Berita Baru';
-            btnSubmit.textContent = 'Tambah Berita';
-            btnCancelEdit.style.display = 'none';
-            renderBerita();
-          })
-          .catch(err => alert('Gagal update berita: ' + err));
+        db.collection("berita").doc(editId).update({ judul, tanggal, gambar, isi }).then(() => {
+          form.reset(); editId = null;
+          formTitle.textContent = 'Tambah Berita Baru';
+          btnSubmit.textContent = 'Tambah Berita';
+          btnCancelEdit.style.display = 'none';
+          renderBerita();
+        });
       } else {
-        // tambah berita baru
-        db.collection("berita").add({ judul, tanggal, gambar, isi })
-          .then(() => {
-            alert('Berita berhasil ditambahkan!');
-            form.reset();
-            renderBerita();
-          })
-          .catch(err => alert('Gagal tambah berita: ' + err));
+        db.collection("berita").add({ judul, tanggal, gambar, isi }).then(() => {
+          form.reset();
+          renderBerita();
+        });
       }
     });
 
-    // Login dengan Firebase Auth
-    btnLogin.addEventListener('click', () => {
-      const email = emailInput.value.trim();
-      const password = passwordInput.value.trim();
+    function renderKlasemen() {
+      klasemenBody.innerHTML = '';
+      db.collection("klasemen").orderBy("poin", "desc").get().then(snapshot => {
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${d.klub}</td><td>${d.main}</td><td>${d.menang}</td><td>${d.seri}</td>
+            <td>${d.kalah}</td><td>${d.poin}</td>
+            <td><button onclick="hapusKlasemen('${doc.id}')">Hapus</button></td>`;
+          klasemenBody.appendChild(row);
+        });
+      });
+    }
 
-      if (!email || !password) {
-        loginError.textContent = 'Email dan password harus diisi.';
-        return;
+    window.hapusKlasemen = function(id) {
+      if (confirm('Hapus data klasemen ini?')) {
+        db.collection("klasemen").doc(id).delete().then(renderKlasemen);
       }
+    }
 
-      loginError.textContent = '';
+    klasemenForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const klub = klubInput.value;
+      const main = parseInt(mainInput.value);
+      const menang = parseInt(menangInput.value);
+      const seri = parseInt(seriInput.value);
+      const kalah = parseInt(kalahInput.value);
+      const poin = parseInt(poinInput.value);
 
+      db.collection("klasemen").add({ klub, main, menang, seri, kalah, poin }).then(() => {
+        klasemenForm.reset();
+        renderKlasemen();
+      });
+    });
+
+    btnLogin.addEventListener('click', () => {
+      const email = emailInput.value;
+      const password = passwordInput.value;
       auth.signInWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-          console.log('Login sukses:', userCredential.user.email);
+        .then(() => {
           loginSection.style.display = 'none';
           dashboardTitle.style.display = 'block';
           form.style.display = 'block';
           daftarBeritaTitle.style.display = 'block';
           tabelBerita.style.display = 'table';
+          document.getElementById('klasemenTitle').style.display = 'block';
+          klasemenForm.style.display = 'block';
+          klasemenTable.style.display = 'table';
           btnLogout.style.display = 'inline-block';
-          loginError.textContent = '';
           renderBerita();
+          renderKlasemen();
         })
-        .catch((error) => {
-          console.error('Login gagal:', error.message);
-          loginError.textContent = error.message;
-        });
+        .catch(err => loginError.textContent = err.message);
     });
 
-    // Logout
     btnLogout.addEventListener('click', () => {
-      auth.signOut().then(() => {
-        loginSection.style.display = 'block';
-        dashboardTitle.style.display = 'none';
-        form.style.display = 'none';
-        daftarBeritaTitle.style.display = 'none';
-        tabelBerita.style.display = 'none';
-        btnLogout.style.display = 'none';
-
-        form.reset();
-        loginError.textContent = '';
-        emailInput.value = '';
-        passwordInput.value = '';
-      });
-    });
-
-    // Cek status login saat halaman dimuat
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        loginSection.style.display = 'none';
-        dashboardTitle.style.display = 'block';
-        form.style.display = 'block';
-        daftarBeritaTitle.style.display = 'block';
-        tabelBerita.style.display = 'table';
-        btnLogout.style.display = 'inline-block';
-        renderBerita();
-      } else {
-        loginSection.style.display = 'block';
-        dashboardTitle.style.display = 'none';
-        form.style.display = 'none';
-        daftarBeritaTitle.style.display = 'none';
-        tabelBerita.style.display = 'none';
-        btnLogout.style.display = 'none';
-
-        form.reset();
-      }
+      auth.signOut().then(() => location.reload());
     });
   </script>
-
 </body>
 </html>
