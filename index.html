@@ -111,119 +111,127 @@
       text-align: center;
     }
   </style>
-</head>
-<body>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-<header>
-  <div class="logo">
-    <div class="title">SARJANA BOLA ID</div>
-    <div class="dot-style">EAST 2023</div>
-    <div class="subtext">Berita Informasi Sepakbola Terkini</div>
-  </div>
-</header>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCm3bqo01GU4EnYDnUjy7rhzkY3teHMNpY",
+      authDomain: "sarjanabola-980e4.firebaseapp.com",
+      projectId: "sarjanabola-980e4",
+      storageBucket: "sarjanabola-980e4.appspot.com",
+      messagingSenderId: "834425792870",
+      appId: "1:834425792870:web:e865ba0a526d20f06e40a7",
+      measurementId: "G-Q36V68S5NM"
+    };
 
-<nav>
-  <a href="#" class="home"><i class="fas fa-home"></i> Home</a>
-  <a href="#" class="liga1"><i class="fas fa-futbol"></i> Liga 1</a>
-  <a href="#" class="klasemen"><i class="fas fa-table"></i> Klasemen</a>
-  <a href="https://instagram.com/b" target="_blank" class="instagram"><i class="fab fa-instagram"></i> Instagram</a>
-  <a href="https://www.facebook.com/Sarjanabola.id" target="_blank" class="facebook"><i class="fab fa-facebook"></i> Facebook</a>
-</nav>
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-<main>
-  <div id="dynamic-berita" style="display: none;"></div>
-  <div id="tabel-klasemen" style="display: none; margin-top: 20px;"></div>
-</main>
+    async function fetchBerita(filterKategori = null) {
+      const querySnapshot = await getDocs(collection(db, "berita"));
+      const container = document.getElementById('dynamic-berita');
+      container.innerHTML = '';
+      const beritaList = [];
 
-<footer>
-  &copy; 2025 BOLA ID UPDATE - Semua Hak Dilindungi
-</footer>
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        beritaList.push(data);
+      });
 
-<script>
-  const container = document.getElementById('dynamic-berita');
-  const klasemenDiv = document.getElementById('tabel-klasemen');
-  let beritaList = JSON.parse(localStorage.getItem('beritaList')) || [];
+      const filtered = filterKategori
+        ? beritaList.filter(item => item.kategori === filterKategori)
+        : beritaList;
 
-  // Fungsi untuk render semua berita
-  function renderBerita(filterKategori = null) {
-    container.innerHTML = '';
-    let filtered = filterKategori 
-      ? beritaList.filter(item => item.kategori === filterKategori)
-      : beritaList;
+      if (filtered.length === 0) {
+        container.innerHTML = '<p>Belum ada berita tersedia.</p>';
+        return;
+      }
 
-    if (filtered.length === 0) {
-      container.innerHTML = '<p>Belum ada berita tersedia.</p>';
-      return;
+      filtered.forEach(item => {
+        const post = document.createElement('article');
+        post.classList.add('post');
+        post.innerHTML = `
+          <h2>${item.judul}</h2>
+          <small>Diposting pada ${item.tanggal}</small>
+          ${item.gambar ? `<img src="${item.gambar}" alt="${item.judul}" />` : ''}
+          <p>${item.isi}</p>
+          <a href="${item.link || '#'}">Baca selengkapnya</a>
+        `;
+        container.appendChild(post);
+      });
     }
 
-    filtered.forEach(item => {
-      const post = document.createElement('article');
-      post.classList.add('post');
-      post.innerHTML = `
-        <h2>${item.judul}</h2>
-        <small>Diposting pada ${item.tanggal}</small>
-        <img src="${item.gambar}" alt="${item.judul}" />
-        <p>${item.isi}</p>
-        <a href="${item.link || '#'}">Baca selengkapnya</a>
-      `;
-      container.appendChild(post);
+    document.addEventListener('DOMContentLoaded', () => {
+      const container = document.getElementById('dynamic-berita');
+      const klasemenDiv = document.getElementById('tabel-klasemen');
+
+      document.querySelector('.home').addEventListener('click', e => {
+        e.preventDefault();
+        container.style.display = 'block';
+        klasemenDiv.style.display = 'none';
+        fetchBerita();
+      });
+
+      document.querySelector('.liga1').addEventListener('click', e => {
+        e.preventDefault();
+        container.style.display = 'block';
+        klasemenDiv.style.display = 'none';
+        fetchBerita("Liga 1");
+      });
+
+      document.querySelector('.klasemen').addEventListener('click', e => {
+        e.preventDefault();
+        container.style.display = 'none';
+        klasemenDiv.style.display = 'block';
+        klasemenDiv.innerHTML = `
+          <h2>Klasemen Liga 1 2025</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Pos</th><th>Tim</th><th>Main</th><th>Menang</th>
+                <th>Seri</th><th>Kalah</th><th>Poin</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>Persib</td><td>34</td><td>19</td><td>12</td><td>3</td><td>69</td></tr>
+              <tr><td>2</td><td>Dewa United</td><td>34</td><td>17</td><td>10</td><td>7</td><td>61</td></tr>
+              <tr><td>3</td><td>Malut United</td><td>34</td><td>15</td><td>12</td><td>7</td><td>57</td></tr>
+              <tr><td>4</td><td>Persebaya</td><td>34</td><td>15</td><td>12</td><td>7</td><td>56</td></tr>
+              <tr><td>5</td><td>Borneo FC</td><td>34</td><td>16</td><td>8</td><td>10</td><td>56</td></tr>
+              <tr><td>6</td><td>PSM Makassar</td><td>34</td><td>13</td><td>14</td><td>7</td><td>53</td></tr>
+            </tbody>
+          </table>
+        `;
+      });
+
+      container.style.display = 'block';
+      klasemenDiv.style.display = 'none';
+      fetchBerita();
     });
-  }
-
-  // TOMBOL HOME - Tampilkan semua berita
-  document.querySelector('.home').addEventListener('click', function (e) {
-    e.preventDefault();
-    container.style.display = 'block';
-    klasemenDiv.style.display = 'none';
-    renderBerita(); // tanpa filter
-  });
-
-  // TOMBOL LIGA 1 - Tampilkan berita kategori Liga 1
-  document.querySelector('.liga1').addEventListener('click', function (e) {
-    e.preventDefault();
-    container.style.display = 'block';
-    klasemenDiv.style.display = 'none';
-    renderBerita("Liga 1"); // dengan filter
-  });
-
-  // TOMBOL KLASMEN
-  document.querySelector('.klasemen').addEventListener('click', function (e) {
-    e.preventDefault();
-    container.style.display = 'none';
-    klasemenDiv.style.display = 'block';
-    klasemenDiv.innerHTML = `
-      <h2>Klasemen Liga 1 2025</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Pos</th>
-            <th>Tim</th>
-            <th>Main</th>
-            <th>Menang</th>
-            <th>Seri</th>
-            <th>Kalah</th>
-            <th>Poin</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>1</td><td>Persib</td><td>34</td><td>19</td><td>12</td><td>3</td><td>69</td></tr>
-          <tr><td>2</td><td>Dewa United</td><td>34</td><td>17</td><td>10</td><td>7</td><td>61</td></tr>
-          <tr><td>3</td><td>Malut United</td><td>34</td><td>15</td><td>12</td><td>7</td><td>57</td></tr>
-          <tr><td>4</td><td>Persebaya</td><td>34</td><td>15</td><td>12</td><td>7</td><td>56</td></tr>
-
-<tr><td>5</td><td>Borneo FC</td><td>34</td><td>16</td><td>8</td><td>10</td><td>56</td></tr>
-
-<tr><td>5</td><td>PSM Makasar</td><td>34</td><td>13</td><td>14</td><td>7</td><td>53</td></tr>
-        </tbody>
-      </table>
-    `;
-  });
-
-  // Tampilkan berita semua saat pertama buka
-  container.style.display = 'block';
-  klasemenDiv.style.display = 'none';
-  renderBerita();
-</script>
-
+  </script>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="title">SARJANA BOLA ID</div>
+      <div class="dot-style">EAST 2023</div>
+      <div class="subtext">Berita Informasi Sepakbola Terkini</div>
+    </div>
+  </header>
+  <nav>
+    <a href="#" class="home"><i class="fas fa-home"></i> Home</a>
+    <a href="#" class="liga1"><i class="fas fa-futbol"></i> Liga 1</a>
+    <a href="#" class="klasemen"><i class="fas fa-table"></i> Klasemen</a>
+    <a href="https://instagram.com/b" target="_blank" class="instagram"><i class="fab fa-instagram"></i> Instagram</a>
+    <a href="https://www.facebook.com/Sarjanabola.id" target="_blank" class="facebook"><i class="fab fa-facebook"></i> Facebook</a>
+  </nav>
+  <main>
+    <div id="dynamic-berita" style="display: none;"></div>
+    <div id="tabel-klasemen" style="display: none; margin-top: 20px;"></div>
+  </main>
+  <footer>
+    &copy; 2025 BOLA ID UPDATE - Semua Hak Dilindungi
+  </footer>
 </body>
 </html>
