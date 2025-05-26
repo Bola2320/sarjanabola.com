@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard - BOLA ID UPDATE</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: auto; padding: 20px; }
+    h1 { color: #7033b86; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px;}
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left;}
+    th { background-color: #033b86; color: white;}
+    button { background-color: #7033b86; border: padding: 6px 12px; cursor: pointer; border-radius: 4px; }
+    button:hover { background-color: #5a0202;}
+    input, textarea { width: 100%; padding: 8px; margin-bottom: 8px; box-sizing: border-box; }
+    /* Tambahan styling untuk login section */
+    #loginSection { max-width: 400px; margin: 0 auto 20px; }
+    #btnLogout { margin-top: 15px; background: #f44336; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; display:none; }
+  </style>
+</head>
+<body>
+
+  <!-- Bagian Login -->
+  <div id="loginSection">
+    <h2>Login Admin</h2>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button id="btnLogin">Login</button>
+    <p id="loginError" style="color:red;"></p>
+  </div>
+
+  <!-- Konten utama admin yang disembunyikan jika belum login -->
+  <h1 id="dashboardTitle" style="display:none;">Admin Dashboard - Kelola Berita</h1>
+
+  <form id="formTambahBerita" style="display:none;">
+    <h3>Tambah Berita Baru</h3>
+    <input type="text" id="judul" placeholder="Judul" required />
+    <input type="date" id="tanggal" required />
+    <input type="text" id="gambar" placeholder="URL Gambar (opsional)" />
+    <textarea id="isi" placeholder="Isi Berita" required rows="4"></textarea>
+    <button type="submit">Tambah Berita</button>
+  </form>
+
+  <h3 id="daftarBeritaTitle" style="display:none;">Daftar Berita</h3>
+  <table id="tabelBerita" style="display:none;">
+    <thead>
+      <tr>
+        <th>Judul</th>
+        <th>Tanggal</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <button id="btnLogout">Logout</button>
+
+  <script>
+    // Data berita dari localStorage
+    const beritaList = JSON.parse(localStorage.getItem('beritaList')) || [];
+
+    // Elemen DOM
+    const tabelBody = document.querySelector('#tabelBerita tbody');
+    const form = document.getElementById('formTambahBerita');
+    const loginSection = document.getElementById('loginSection');
+    const btnLogin = document.getElementById('btnLogin');
+    const loginError = document.getElementById('loginError');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const dashboardTitle = document.getElementById('dashboardTitle');
+    const daftarBeritaTitle = document.getElementById('daftarBeritaTitle');
+    const tabelBerita = document.getElementById('tabelBerita');
+    const btnLogout = document.getElementById('btnLogout');
+
+    // Username & password valid (ubah sesuai kebutuhan)
+    const validUsername = 'buattes12';
+    const validPassword = 'baikboss';
+
+    // Render berita ke tabel
+    function renderBerita() {
+      tabelBody.innerHTML = '';
+      beritaList.forEach((berita, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${berita.judul}</td>
+          <td>${berita.tanggal}</td>
+          <td>
+            <button onclick="hapusBerita(${index})">Hapus</button>
+          </td>
+        `;
+        tabelBody.appendChild(row);
+      });
+    }
+
+    // Hapus berita dan update localStorage + render ulang
+    function hapusBerita(index) {
+      if(confirm('Yakin ingin menghapus berita ini?')) {
+        beritaList.splice(index, 1);
+        localStorage.setItem('beritaList', JSON.stringify(beritaList));
+        renderBerita();
+      }
+    }
+
+    // Form submit tambah berita baru
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const judul = document.getElementById('judul').value.trim();
+      const tanggal = document.getElementById('tanggal').value;
+      const gambar = document.getElementById('gambar').value.trim();
+      const isi = document.getElementById('isi').value.trim();
+
+      beritaList.push({ judul, tanggal, gambar, isi });
+      localStorage.setItem('beritaList', JSON.stringify(beritaList));
+      renderBerita();
+      form.reset();
+      alert('Berita berhasil ditambahkan!');
+    });
+
+    // Fungsi update UI sesuai status login
+    function updateUI() {
+      const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+      if (loggedIn) {
+        loginSection.style.display = 'none';
+        dashboardTitle.style.display = 'block';
+        form.style.display = 'block';
+        daftarBeritaTitle.style.display = 'block';
+        tabelBerita.style.display = 'table';
+        btnLogout.style.display = 'inline-block';
+        renderBerita();
+      } else {
+        loginSection.style.display = 'block';
+        dashboardTitle.style.display = 'none';
+        form.style.display = 'none';
+        daftarBeritaTitle.style.display = 'none';
+        tabelBerita.style.display = 'none';
+        btnLogout.style.display = 'none';
+      }
+    }
+
+    // Login button click event
+    btnLogin.addEventListener('click', () => {
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if(username === validUsername && password === validPassword) {
+        localStorage.setItem('isLoggedIn', 'true');
+        loginError.textContent = '';
+        updateUI();
+      } else {
+        loginError.textContent = 'Username atau password salah!';
+      }
+    });
+
+    // Logout button click event
+    btnLogout.addEventListener('click', () => {
+      localStorage.removeItem('isLoggedIn');
+      updateUI();
+    });
+
+    // Buat fungsi hapusBerita bisa diakses dari tombol di tabel
+    window.hapusBerita = hapusBerita;
+
+    // Inisialisasi tampilan awal
+    updateUI();
+  </script>
+</body>
+</html>

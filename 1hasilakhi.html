@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SARJANABOLA - Blog Sepak Bola</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      background-color: #033b86;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .logo .title {
+      font-size: 28px;
+      letter-spacing: 2px;
+      font-weight: bold;
+    }
+    .logo .dot-style {
+      font-size: 16px;
+      color: #f15034;
+      margin-top: 5px;
+      letter-spacing: 5px;
+      font-weight: bold;
+    }
+    .logo .subtext {
+      font-size: 13px;
+      color: #fc7e14;
+      margin-top: 8px;
+    }
+    nav {
+      background: #444;
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav a:hover {
+      color: #25D366;
+    }
+    main {
+      flex: 1;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+      padding-bottom: 70px;
+    }
+    .post {
+      background: white;
+      padding: 15px;
+      margin-bottom: 25px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .post small {
+      color: gray;
+      font-style: italic;
+    }
+    .post img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+    .post a {
+      color: #25D366;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .post a:hover {
+      text-decoration: underline;
+    }
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #444;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      z-index: 9999;
+    }
+    table {
+      width: 100%;
+      background: white;
+      border-collapse: collapse;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th {
+      background: #033b86;
+      color: white;
+    }
+    td, th {
+      padding: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="title">SARJANA BOLA ID</div>
+    <div class="dot-style">EAST 2023</div>
+    <div class="subtext">Berita Informasi Sepakbola Terkini</div>
+  </div>
+</header>
+
+<nav>
+  <a href="#" class="home"><i class="fas fa-home"></i> Home</a>
+  <a href="#" class="liga1"><i class="fas fa-futbol"></i> Liga 1</a>
+  <a href="#" class="klasemen"><i class="fas fa-table"></i> Klasemen</a>
+  <a href="https://instagram.com/b" target="_blank" class="instagram"><i class="fab fa-instagram"></i> Instagram</a>
+  <a href="https://www.facebook.com/Sarjanabola.id" target="_blank" class="facebook"><i class="fab fa-facebook"></i> Facebook</a>
+</nav>
+
+<main>
+  <div id="dynamic-berita" style="display: none;"></div>
+  <div id="tabel-klasemen" style="display: none; margin-top: 20px;"></div>
+</main>
+
+<footer>
+  &copy; 2025 BOLA ID UPDATE - Semua Hak Dilindungi
+</footer>
+
+<script>
+  const container = document.getElementById('dynamic-berita');
+  const klasemenDiv = document.getElementById('tabel-klasemen');
+  let beritaList = JSON.parse(localStorage.getItem('beritaList')) || [];
+
+  // Fungsi untuk render semua berita
+  function renderBerita(filterKategori = null) {
+    container.innerHTML = '';
+    let filtered = filterKategori 
+      ? beritaList.filter(item => item.kategori === filterKategori)
+      : beritaList;
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<p>Belum ada berita tersedia.</p>';
+      return;
+    }
+
+    filtered.forEach(item => {
+      const post = document.createElement('article');
+      post.classList.add('post');
+      post.innerHTML = `
+        <h2>${item.judul}</h2>
+        <small>Diposting pada ${item.tanggal}</small>
+        <img src="${item.gambar}" alt="${item.judul}" />
+        <p>${item.isi}</p>
+        <a href="${item.link || '#'}">Baca selengkapnya</a>
+      `;
+      container.appendChild(post);
+    });
+  }
+
+  // TOMBOL HOME - Tampilkan semua berita
+  document.querySelector('.home').addEventListener('click', function (e) {
+    e.preventDefault();
+    container.style.display = 'block';
+    klasemenDiv.style.display = 'none';
+    renderBerita(); // tanpa filter
+  });
+
+  // TOMBOL LIGA 1 - Tampilkan berita kategori Liga 1
+  document.querySelector('.liga1').addEventListener('click', function (e) {
+    e.preventDefault();
+    container.style.display = 'block';
+    klasemenDiv.style.display = 'none';
+    renderBerita("Liga 1"); // dengan filter
+  });
+
+  // TOMBOL KLASMEN
+  document.querySelector('.klasemen').addEventListener('click', function (e) {
+    e.preventDefault();
+    container.style.display = 'none';
+    klasemenDiv.style.display = 'block';
+    klasemenDiv.innerHTML = `
+      <h2>Klasemen Liga 1 2025</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Pos</th>
+            <th>Tim</th>
+            <th>Main</th>
+            <th>Menang</th>
+            <th>Seri</th>
+            <th>Kalah</th>
+            <th>Poin</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>Persib</td><td>34</td><td>19</td><td>12</td><td>3</td><td>69</td></tr>
+          <tr><td>2</td><td>Dewa United</td><td>34</td><td>17</td><td>10</td><td>7</td><td>61</td></tr>
+          <tr><td>3</td><td>Malut United</td><td>34</td><td>15</td><td>12</td><td>7</td><td>57</td></tr>
+          <tr><td>4</td><td>Persebaya</td><td>34</td><td>15</td><td>12</td><td>7</td><td>56</td></tr>
+
+<tr><td>5</td><td>Borneo FC</td><td>34</td><td>16</td><td>8</td><td>10</td><td>56</td></tr>
+
+<tr><td>5</td><td>PSM Makasar</td><td>34</td><td>13</td><td>14</td><td>7</td><td>53</td></tr>
+        </tbody>
+      </table>
+    `;
+  });
+
+  // Tampilkan berita semua saat pertama buka
+  container.style.display = 'block';
+  klasemenDiv.style.display = 'none';
+  renderBerita();
+</script>
+
+</body>
+</html>
