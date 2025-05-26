@@ -166,6 +166,38 @@
       });
     }
 
+    async function fetchKlasemen() {
+      const klasemenDiv = document.getElementById('tabel-klasemen');
+      const querySnapshot = await getDocs(collection(db, "klasemen"));
+      let rows = "";
+
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        rows += `
+          <tr>
+            <td>${data.posisi}</td>
+            <td>${data.tim}</td>
+            <td>${data.main}</td>
+            <td>${data.menang}</td>
+            <td>${data.seri}</td>
+            <td>${data.kalah}</td>
+            <td>${data.poin}</td>
+          </tr>`;
+      });
+
+      klasemenDiv.innerHTML = `
+        <h2>Klasemen Liga 1 2025</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Pos</th><th>Tim</th><th>Main</th><th>Menang</th>
+              <th>Seri</th><th>Kalah</th><th>Poin</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       const container = document.getElementById('dynamic-berita');
       const klasemenDiv = document.getElementById('tabel-klasemen');
@@ -188,25 +220,7 @@
         e.preventDefault();
         container.style.display = 'none';
         klasemenDiv.style.display = 'block';
-        klasemenDiv.innerHTML = `
-          <h2>Klasemen Liga 1 2025</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Pos</th><th>Tim</th><th>Main</th><th>Menang</th>
-                <th>Seri</th><th>Kalah</th><th>Poin</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>1</td><td>Persib</td><td>34</td><td>19</td><td>12</td><td>3</td><td>69</td></tr>
-              <tr><td>2</td><td>Dewa United</td><td>34</td><td>17</td><td>10</td><td>7</td><td>61</td></tr>
-              <tr><td>3</td><td>Malut United</td><td>34</td><td>15</td><td>12</td><td>7</td><td>57</td></tr>
-              <tr><td>4</td><td>Persebaya</td><td>34</td><td>15</td><td>12</td><td>7</td><td>56</td></tr>
-              <tr><td>5</td><td>Borneo FC</td><td>34</td><td>16</td><td>8</td><td>10</td><td>56</td></tr>
-              <tr><td>6</td><td>PSM Makassar</td><td>34</td><td>13</td><td>14</td><td>7</td><td>53</td></tr>
-            </tbody>
-          </table>
-        `;
+        fetchKlasemen();
       });
 
       container.style.display = 'block';
