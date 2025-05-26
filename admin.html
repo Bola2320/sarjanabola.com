@@ -5,17 +5,19 @@
   <title>Admin Dashboard - BOLA ID UPDATE</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 900px; margin: auto; padding: 20px; }
-    h1 { color: #7033b86; }
+    h1 { color: #7033b8; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px;}
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left;}
     th { background-color: #033b86; color: white;}
-    button { background-color: #7033b86; border: padding: 6px 12px; cursor: pointer; border-radius: 4px; }
-    button:hover { background-color: #5a0202;}
+    button { background-color: #7033b8; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; color: white; }
+    button:hover { background-color: #5a0202; }
     input, textarea { width: 100%; padding: 8px; margin-bottom: 8px; box-sizing: border-box; }
-    /* Tambahan styling untuk login section */
     #loginSection { max-width: 400px; margin: 0 auto 20px; }
     #btnLogout { margin-top: 15px; background: #f44336; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; display:none; }
   </style>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -28,9 +30,7 @@
     <p id="loginError" style="color:red;"></p>
   </div>
 
-  <!-- Konten utama admin yang disembunyikan jika belum login -->
   <h1 id="dashboardTitle" style="display:none;">Admin Dashboard - Kelola Berita</h1>
-
   <form id="formTambahBerita" style="display:none;">
     <h3>Tambah Berita Baru</h3>
     <input type="text" id="judul" placeholder="Judul" required />
@@ -55,10 +55,18 @@
   <button id="btnLogout">Logout</button>
 
   <script>
-    // Data berita dari localStorage
-    const beritaList = JSON.parse(localStorage.getItem('beritaList')) || [];
+    const firebaseConfig = {
+      apiKey: "AIzaSyCm3bqo01GU4EnYDnUjy7rhzkY3teHMNpY",
+      authDomain: "sarjanabola-980e4.firebaseapp.com",
+      projectId: "sarjanabola-980e4",
+      storageBucket: "sarjanabola-980e4.appspot.com",
+      messagingSenderId: "834425792870",
+      appId: "1:834425792870:web:e865ba0a526d20f06e40a7",
+      measurementId: "G-Q36V68S5NM"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    // Elemen DOM
     const tabelBody = document.querySelector('#tabelBerita tbody');
     const form = document.getElementById('formTambahBerita');
     const loginSection = document.getElementById('loginSection');
@@ -71,36 +79,34 @@
     const tabelBerita = document.getElementById('tabelBerita');
     const btnLogout = document.getElementById('btnLogout');
 
-    // Username & password valid (ubah sesuai kebutuhan)
-    const validUsername = 'buattes12';
-    const validPassword = 'baikboss';
+    const validUsername = 'sarjanabola';
+    const validPassword = '1234aadd';
 
-    // Render berita ke tabel
     function renderBerita() {
       tabelBody.innerHTML = '';
-      beritaList.forEach((berita, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${berita.judul}</td>
-          <td>${berita.tanggal}</td>
-          <td>
-            <button onclick="hapusBerita(${index})">Hapus</button>
-          </td>
-        `;
-        tabelBody.appendChild(row);
+      db.collection("berita").get().then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          const berita = doc.data();
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${berita.judul}</td>
+            <td>${berita.tanggal}</td>
+            <td><button onclick="hapusBerita('${doc.id}')">Hapus</button></td>
+          `;
+          tabelBody.appendChild(row);
+        });
       });
     }
 
-    // Hapus berita dan update localStorage + render ulang
-    function hapusBerita(index) {
+    function hapusBerita(id) {
       if(confirm('Yakin ingin menghapus berita ini?')) {
-        beritaList.splice(index, 1);
-        localStorage.setItem('beritaList', JSON.stringify(beritaList));
-        renderBerita();
+        db.collection("berita").doc(id).delete().then(() => {
+          alert('Berita dihapus.');
+          renderBerita();
+        });
       }
     }
 
-    // Form submit tambah berita baru
     form.addEventListener('submit', e => {
       e.preventDefault();
       const judul = document.getElementById('judul').value.trim();
@@ -108,14 +114,14 @@
       const gambar = document.getElementById('gambar').value.trim();
       const isi = document.getElementById('isi').value.trim();
 
-      beritaList.push({ judul, tanggal, gambar, isi });
-      localStorage.setItem('beritaList', JSON.stringify(beritaList));
-      renderBerita();
-      form.reset();
-      alert('Berita berhasil ditambahkan!');
+      db.collection("berita").add({ judul, tanggal, gambar, isi })
+        .then(() => {
+          form.reset();
+          alert('Berita berhasil ditambahkan!');
+          renderBerita();
+        });
     });
 
-    // Fungsi update UI sesuai status login
     function updateUI() {
       const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
       if (loggedIn) {
@@ -136,11 +142,9 @@
       }
     }
 
-    // Login button click event
     btnLogin.addEventListener('click', () => {
       const username = usernameInput.value.trim();
       const password = passwordInput.value.trim();
-
       if(username === validUsername && password === validPassword) {
         localStorage.setItem('isLoggedIn', 'true');
         loginError.textContent = '';
@@ -150,16 +154,12 @@
       }
     });
 
-    // Logout button click event
     btnLogout.addEventListener('click', () => {
       localStorage.removeItem('isLoggedIn');
       updateUI();
     });
 
-    // Buat fungsi hapusBerita bisa diakses dari tombol di tabel
     window.hapusBerita = hapusBerita;
-
-    // Inisialisasi tampilan awal
     updateUI();
   </script>
 </body>
