@@ -169,14 +169,21 @@
     async function fetchKlasemen() {
       const klasemenDiv = document.getElementById('tabel-klasemen');
       const querySnapshot = await getDocs(collection(db, "klasemen"));
-      let rows = "";
-
+      const dataArray = [];
+       
       querySnapshot.forEach(doc => {
-        const data = doc.data();
+        dataArray.push(doc.data());
+    });
+
+      // Sort data berdasarkan poin, dari besar ke kecil
+      dataArray.sort((a, b) => b.poin - a.poin);
+
+      let rows = "";
+      dataArray.forEach((data, index) => {
         rows += `
           <tr>
+            <td>${index + 1}</td>  <!-- posisi otomatis -->
             <td>${data.klub}</td>
-            <td>${data.tim}</td>
             <td>${data.main}</td>
             <td>${data.menang}</td>
             <td>${data.seri}</td>
