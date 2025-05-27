@@ -8,7 +8,10 @@
   <!-- Google Site Verification -->
   <meta name="google-site-verification" content="googlec54b71aa078bee70" />
     
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -47,13 +50,12 @@
       background: #444;
       padding: 10px;
       display: flex;
-      justify-content: flex-start; /* Default untuk mobile */
+      justify-content: flex-start;
       gap: 20px;
       overflow-x: auto;
-      white-space: nowrap;
-      max-width: 100vw;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: thin;
+      white-space: normal; /* ubah dari nowrap ke normal supaya ikon muncul */
     }
     nav::-webkit-scrollbar {
       height: 6px;
@@ -66,9 +68,17 @@
       color: white;
       text-decoration: none;
       font-weight: bold;
-      white-space: nowrap;
-      display: inline-block;
+      white-space: nowrap; /* tetap nowrap di tiap link */
+      display: inline-flex; /* supaya ikon dan teks sejajar */
+      align-items: center;
       padding: 5px 10px;
+      min-width: max-content; /* supaya tidak terpotong */
+    }
+    nav a i {
+      font-size: 16px;
+      margin-right: 6px;
+      flex-shrink: 0; /* ikon tidak mengecil */
+      display: inline-block !important;
     }
     nav a:hover {
       color: #25D366;
@@ -141,14 +151,17 @@
       text-align: center;
     }
 
+    /* Buat bagian tabel klasemen scroll horizontal tanpa ubah struktur */
+    #tabel-klasemen > table {
+      display: block;
+      width: 100%;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
     /* Responsive untuk tabel klasemen di mobile */
     @media (max-width: 767px) {
-      #tabel-klasemen table {
-        display: block;
-        width: 100%;
-        overflow-x: auto;
-        white-space: nowrap;
-      }
+      /* Tidak perlu rubah di sini lagi karena sudah pakai di atas */
     }
   </style>
   <script type="module">
@@ -209,7 +222,7 @@
        
       querySnapshot.forEach(doc => {
         dataArray.push(doc.data());
-    });
+      });
 
       // Sort data berdasarkan poin, dari besar ke kecil
       dataArray.sort((a, b) => b.poin - a.poin);
@@ -218,7 +231,7 @@
       dataArray.forEach((data, index) => {
         rows += `
           <tr>
-            <td>${index + 1}</td>  <!-- posisi otomatis -->
+            <td>${index + 1}</td>
             <td>${data.klub}</td>
             <td>${data.main}</td>
             <td>${data.menang}</td>
