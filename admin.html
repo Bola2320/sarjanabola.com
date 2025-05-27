@@ -2,258 +2,533 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin Dashboard - BOLA ID UPDATE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard DEWAWINBET</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 900px; margin: auto; padding: 20px; }
-    h1 { color: #7033b8; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background-color: #033b86; color: white; }
-    button { background-color: #7033b8; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; color: white; }
-    button:hover { background-color: #5a0202; }
-    input, textarea { width: 100%; padding: 8px; margin-bottom: 8px; box-sizing: border-box; }
-    #loginSection { max-width: 400px; margin: 0 auto 20px; }
-    #btnLogout { margin-top: 15px; background: #f44336; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; display:none; }
+    /* Reset */
+    * { box-sizing: border-box; margin:0; padding:0; font-family: Arial, sans-serif; }
+    body { background:#f4f4f4; color:#333; }
+
+    /* Login */
+    #loginSection { max-width:400px; margin: 50px auto; background:#fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px #ccc; }
+    #loginSection h2 { margin-bottom: 20px; text-align:center; color:#7033b8; }
+    #loginSection input { width:100%; padding:10px; margin:8px 0; border:1px solid #ccc; border-radius: 4px; }
+    #loginSection button { width:100%; background:#7033b8; color:#fff; padding:10px; border:none; border-radius: 4px; cursor:pointer; font-weight:bold; }
+    #loginError { color: red; margin-top:10px; text-align:center; }
+
+    /* Container admin */
+    #containerAdmin { display: flex; min-height: 80vh; }
+
+    /* Sidebar navigasi */
+    #sidebarNav {
+      width: 120px; background:#033b86; color:#fff;
+      display:flex; flex-direction: column; gap:10px;
+      padding:10px 5px; box-sizing: border-box;
+    }
+    #sidebarNav button {
+      background:none; border:none; color:#fff;
+      cursor:pointer; padding:10px; border-radius: 4px;
+      font-weight: 600; transition: background-color 0.3s;
+    }
+    #sidebarNav button:hover, #sidebarNav button.active {
+      background: #5a2691;
+    }
+
+    /* Konten utama */
+    #mainContent {
+      flex-grow:1; padding: 20px 30px; background:#fff; border-radius: 8px; margin-left: 15px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    }
+
+    h1, h2, h3 {
+      color:#7033b8;
+      margin-bottom: 15px;
+    }
+
+    form input, form textarea {
+      width: 100%; padding: 10px; margin-bottom: 15px;
+      border:1px solid #ccc; border-radius: 4px; font-size: 14px;
+    }
+    form button {
+      background:#7033b8; color:#fff; border:none; padding: 10px 20px;
+      cursor:pointer; font-weight: 700; border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+    form button:hover {
+      background:#5a2691;
+    }
+    button#btnCancelEdit {
+      background:#999; margin-left: 10px;
+    }
+
+    /* Tabel */
+    table {
+      width: 100%; border-collapse: collapse; margin-top: 15px;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 10px; text-align: left;
+    }
+    th {
+      background: #7033b8; color:#fff;
+    }
+
+    /* Tombol aksi di tabel */
+    .btnEdit, .btnDelete {
+      padding: 5px 12px; border:none; border-radius: 4px; cursor: pointer;
+      font-weight: 600; font-size: 13px;
+    }
+    .btnEdit {
+      background: #2196f3; color:#fff; margin-right: 5px;
+    }
+    .btnDelete {
+      background: #f44336; color:#fff;
+    }
+
+    /* Logout button */
+    #btnLogout {
+      margin-top: 30px;
+      background: #f44336; width: 100%; padding: 12px; border:none; border-radius: 6px;
+      color: white; font-weight: 700; cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #btnLogout:hover {
+      background: #c62828;
+    }
   </style>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
+  <!-- LOGIN -->
   <div id="loginSection">
-    <h2>Login Admin</h2>
+    <h2>SARJANA BOLA LOGIN</h2>
     <input type="email" id="email" placeholder="Email" />
     <input type="password" id="password" placeholder="Password" />
     <button id="btnLogin">Login</button>
-    <p id="loginError" style="color:red;"></p>
+    <div id="loginError"></div>
   </div>
 
-  <h1 id="dashboardTitle" style="display:none;">Admin Dashboard - Kelola Berita & Klasemen</h1>
+  <!-- ADMIN CONTAINER -->
+  <div id="containerAdmin" style="display:none;">
+    <!-- SIDEBAR -->
+    <nav id="sidebarNav">
+      <button id="btnBerita" class="active">Berita</button>
+      <button id="btnKlasemen">Klasemen</button>
+      <button id="btnLiga1">Liga 1</button>
+    </nav>
 
-  <form id="formTambahBerita" style="display:none;">
-    <h3 id="formTitle">Tambah Berita Baru</h3>
-    <input type="text" id="judul" placeholder="Judul" required />
-    <input type="date" id="tanggal" required />
-    <input type="text" id="gambar" placeholder="URL Gambar (opsional)" />
-    <textarea id="isi" placeholder="Isi Berita" required rows="4"></textarea>
-    <button type="submit" id="btnSubmit">Tambah Berita</button>
-    <button type="button" id="btnCancelEdit" style="display:none; margin-left: 10px; background: #999;">Batal Edit</button>
-  </form>
+    <!-- MAIN CONTENT -->
+    <div id="mainContent">
 
-  <h3 id="daftarBeritaTitle" style="display:none;">Daftar Berita</h3>
-  <table id="tabelBerita" style="display:none;">
-    <thead>
-      <tr>
-        <th>Judul</th>
-        <th>Tanggal</th>
-        <th>Aksi</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+      <!-- Berita Section -->
+      <div id="sectionBerita">
+        <h1> ADMIN SARJANA BOLA </h1>
 
-  <!-- Bagian Tambah Klasemen -->
-  <div id="formTambahKlasemen" style="display:none; margin-top: 30px;">
-    <h3>Tambah Klasemen</h3>
-    <input type="text" id="klub" placeholder="Nama Klub" required />
-    <input type="number" id="main" placeholder="Main" required />
-    <input type="number" id="menang" placeholder="Menang" required />
-    <input type="number" id="seri" placeholder="Seri" required />
-    <input type="number" id="kalah" placeholder="Kalah" required />
-    <input type="number" id="poin" placeholder="Poin" required />
-    <button id="btnTambahKlasemen">Tambah Klasemen</button>
+        <form id="formTambahBerita">
+          <h3 id="formTitle">Tambah Berita Baru</h3>
+          <input type="text" id="judul" placeholder="Judul" required />
+          <input type="date" id="tanggal" required />
+          <input type="text" id="gambar" placeholder="URL Gambar (opsional)" />
+          <textarea id="isi" placeholder="Isi Berita" required rows="4"></textarea>
+          <button type="submit" id="btnSubmit">Tambah Berita</button>
+          <button type="button" id="btnCancelEdit" style="display:none;">Batal Edit</button>
+        </form>
+
+        <h3>Daftar Berita</h3>
+        <table id="tabelBerita">
+          <thead>
+            <tr>
+              <th>Judul</th>
+              <th>Tanggal</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Klasemen Section -->
+      <div id="sectionKlasemen" style="display:none;">
+        <h3>Tambah Klasemen</h3>
+        <form id="formTambahKlasemen">
+          <input type="text" id="klub" placeholder="Nama Klub" required />
+          <input type="number" id="main" placeholder="Main" required />
+          <input type="number" id="menang" placeholder="Menang" required />
+          <input type="number" id="seri" placeholder="Seri" required />
+          <input type="number" id="kalah" placeholder="Kalah" required />
+          <input type="number" id="poin" placeholder="Poin" required />
+          <button type="submit" id="btnTambahKlasemen">Tambah Klasemen</button>
+        </form>
+
+        <h3>Daftar Klasemen</h3>
+        <table id="tabelKlasemen">
+          <thead>
+            <tr>
+              <th>Posisi</th>
+              <th>Klub</th>
+              <th>Main</th>
+              <th>Menang</th>
+              <th>Seri</th>
+              <th>Kalah</th>
+              <th>Poin</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Liga 1 Section -->
+      <div id="sectionLiga1" style="display:none;">
+        <h2>Liga 1 - Coming Soon</h2>
+      </div>
+
+      <button id="btnLogout">Logout</button>
+    </div>
   </div>
 
-  <h3 id="daftarKlasemenTitle" style="display:none; margin-top: 30px;">Daftar Klasemen</h3>
-  <table id="tabelKlasemen" style="display:none;">
-    <thead>
-      <tr>
-        <th>Posisi</th>
-        <th>Klub</th>
-        <th>Main</th>
-        <th>Menang</th>
-        <th>Seri</th>
-        <th>Kalah</th>
-        <th>Poin</th>
-        <th>Aksi</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <button id="btnLogout">Logout</button>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <script>
+    // TODO: Ganti config dengan project Firebase kamu
     const firebaseConfig = {
       apiKey: "AIzaSyCm3bqo01GU4EnYDnUjy7rhzkY3teHMNpY",
       authDomain: "sarjanabola-980e4.firebaseapp.com",
       projectId: "sarjanabola-980e4",
-      storageBucket: "sarjanabola-980e4.appspot.com",
+      storageBucket: "sarjanabola-980e4.firebasestorage.app",
       messagingSenderId: "834425792870",
-      appId: "1:834425792870:web:e865ba0a526d20f06e40a7"
+      appId: "1:834425792870:web:e865ba0a526d20f06e40a7",
+      pengukuranId : "G-Q36V68S5NM" 
     };
+
+    // Init Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // DOM Elements
     const loginSection = document.getElementById('loginSection');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const btnLogin = document.getElementById('btnLogin');
+    const containerAdmin = document.getElementById('containerAdmin');
     const loginError = document.getElementById('loginError');
-    const dashboardTitle = document.getElementById('dashboardTitle');
-    const form = document.getElementById('formTambahBerita');
-    const formTitle = document.getElementById('formTitle');
-    const btnSubmit = document.getElementById('btnSubmit');
-    const btnCancelEdit = document.getElementById('btnCancelEdit');
-    const judulInput = document.getElementById('judul');
-    const tanggalInput = document.getElementById('tanggal');
-    const gambarInput = document.getElementById('gambar');
-    const isiInput = document.getElementById('isi');
-    const daftarBeritaTitle = document.getElementById('daftarBeritaTitle');
-    const tabelBerita = document.getElementById('tabelBerita');
-    const tabelBody = tabelBerita.querySelector('tbody');
-    const btnLogout = document.getElementById('btnLogout');
 
-    const formKlasemen = document.getElementById('formTambahKlasemen');
-    const klubInput = document.getElementById('klub');
-    const mainInput = document.getElementById('main');
-    const menangInput = document.getElementById('menang');
-    const seriInput = document.getElementById('seri');
-    const kalahInput = document.getElementById('kalah');
-    const poinInput = document.getElementById('poin');
-    const btnTambahKlasemen = document.getElementById('btnTambahKlasemen');
-    const daftarKlasemenTitle = document.getElementById('daftarKlasemenTitle');
-    const tabelKlasemen = document.getElementById('tabelKlasemen');
-    const klasemenBody = tabelKlasemen.querySelector('tbody');
+    // Login
+    document.getElementById('btnLogin').addEventListener('click', () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      loginError.textContent = '';
 
-    let editId = null;
+      if (!email || !password) {
+        loginError.textContent = 'Email dan password harus diisi!';
+        return;
+      }
 
-    btnLogin.addEventListener('click', () => {
-      const email = emailInput.value.trim();
-      const password = passwordInput.value.trim();
-      auth.signInWithEmailAndPassword(email, password).then(() => {
-        loginSection.style.display = 'none';
-        dashboardTitle.style.display = 'block';
-        form.style.display = 'block';
-        daftarBeritaTitle.style.display = 'block';
-        tabelBerita.style.display = 'table';
-        formKlasemen.style.display = 'block';
-        daftarKlasemenTitle.style.display = 'block';
-        tabelKlasemen.style.display = 'table';
-        btnLogout.style.display = 'inline-block';
-        renderBerita();
-        renderKlasemen();
-      }).catch(err => {
-        loginError.textContent = 'Login gagal: ' + err.message;
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          loginSection.style.display = 'none';
+          containerAdmin.style.display = 'flex';
+          loadBerita();
+          loadKlasemen();
+        })
+        .catch(err => {
+          loginError.textContent = err.message;
+        });
+    });
+
+    // Logout
+    document.getElementById('btnLogout').addEventListener('click', () => {
+      auth.signOut().then(() => {
+        containerAdmin.style.display = 'none';
+        loginSection.style.display = 'block';
+        clearFormsAndTables();
       });
     });
 
-    btnLogout.addEventListener('click', () => {
-      auth.signOut().then(() => location.reload());
+    // Clear input dan tabel
+    function clearFormsAndTables() {
+      // Berita form
+      document.getElementById('judul').value = '';
+      document.getElementById('tanggal').value = '';
+      document.getElementById('gambar').value = '';
+      document.getElementById('isi').value = '';
+
+      // Klasemen form
+      document.getElementById('klub').value = '';
+      document.getElementById('main').value = '';
+      document.getElementById('menang').value = '';
+      document.getElementById('seri').value = '';
+      document.getElementById('kalah').value = '';
+      document.getElementById('poin').value = '';
+
+      // Clear tables
+      document.querySelector('#tabelBerita tbody').innerHTML = '';
+      document.querySelector('#tabelKlasemen tbody').innerHTML = '';
+    }
+
+    // SIDEBAR NAVIGATION
+    const btnBerita = document.getElementById('btnBerita');
+    const btnKlasemen = document.getElementById('btnKlasemen');
+    const btnLiga1 = document.getElementById('btnLiga1');
+
+    const sectionBerita = document.getElementById('sectionBerita');
+    const sectionKlasemen = document.getElementById('sectionKlasemen');
+    const sectionLiga1 = document.getElementById('sectionLiga1');
+
+    function setActiveButton(activeBtn) {
+      [btnBerita, btnKlasemen, btnLiga1].forEach(btn => {
+        btn.classList.remove('active');
+      });
+      activeBtn.classList.add('active');
+    }
+
+    function showSection(section, activeBtn) {
+      sectionBerita.style.display = 'none';
+      sectionKlasemen.style.display = 'none';
+      sectionLiga1.style.display = 'none';
+      section.style.display = 'block';
+      setActiveButton(activeBtn);
+    }
+
+    btnBerita.addEventListener('click', () => showSection(sectionBerita, btnBerita));
+    btnKlasemen.addEventListener('click', () => showSection(sectionKlasemen, btnKlasemen));
+    btnLiga1.addEventListener('click', () => showSection(sectionLiga1, btnLiga1));
+
+    // Default show Berita jika sudah login
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        loginSection.style.display = 'none';
+        containerAdmin.style.display = 'flex';
+        loadBerita();
+        loadKlasemen();
+        showSection(sectionBerita, btnBerita);
+      } else {
+        loginSection.style.display = 'block';
+        containerAdmin.style.display = 'none';
+      }
     });
 
-    form.addEventListener('submit', e => {
+    // ----- BERITA -----
+
+    let editBeritaId = null;
+
+    // Load berita dari Firestore
+    function loadBerita() {
+      const tbody = document.querySelector('#tabelBerita tbody');
+      tbody.innerHTML = '';
+      db.collection('berita').orderBy('tanggal', 'desc').get().then(snapshot => {
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${data.judul}</td>
+            <td>${data.tanggal}</td>
+            <td>
+              <button class="btnEdit" data-id="${doc.id}">Edit</button>
+              <button class="btnDelete" data-id="${doc.id}">Hapus</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+        // Pasang event edit & hapus
+        setBeritaActionListeners();
+      });
+    }
+
+    // Submit tambah/edit berita
+    document.getElementById('formTambahBerita').addEventListener('submit', e => {
       e.preventDefault();
-      const judul = judulInput.value.trim();
-      const tanggal = tanggalInput.value;
-      const gambar = gambarInput.value.trim();
-      const isi = isiInput.value.trim();
-      if (!judul || !tanggal || !isi) return alert('Harap isi semua field.');
-      if (editId) {
-        db.collection("berita").doc(editId).update({ judul, tanggal, gambar, isi }).then(() => {
-          alert('Berita diperbarui.');
-          form.reset();
-          editId = null;
-          renderBerita();
+      const judul = document.getElementById('judul').value.trim();
+      const tanggal = document.getElementById('tanggal').value;
+      const gambar = document.getElementById('gambar').value.trim();
+      const isi = document.getElementById('isi').value.trim();
+
+      if (!judul || !tanggal || !isi) {
+        alert('Judul, tanggal dan isi wajib diisi!');
+        return;
+      }
+
+      const data = { judul, tanggal, gambar, isi };
+
+      if (editBeritaId) {
+        // update
+        db.collection('berita').doc(editBeritaId).update(data).then(() => {
+          alert('Berita berhasil diupdate.');
+          editBeritaId = null;
+          resetBeritaForm();
+          loadBerita();
         });
       } else {
-        db.collection("berita").add({ judul, tanggal, gambar, isi }).then(() => {
-          alert('Berita ditambahkan.');
-          form.reset();
-          renderBerita();
+        // tambah baru
+        db.collection('berita').add(data).then(() => {
+          alert('Berita berhasil ditambahkan.');
+          resetBeritaForm();
+          loadBerita();
         });
       }
     });
 
-    btnCancelEdit.addEventListener('click', () => {
-      editId = null;
-      form.reset();
-      btnSubmit.textContent = 'Tambah Berita';
-      btnCancelEdit.style.display = 'none';
+    // Reset form berita ke default tambah
+    function resetBeritaForm() {
+      document.getElementById('judul').value = '';
+      document.getElementById('tanggal').value = '';
+      document.getElementById('gambar').value = '';
+      document.getElementById('isi').value = '';
+      document.getElementById('btnSubmit').textContent = 'Tambah Berita';
+      document.getElementById('formTitle').textContent = 'Tambah Berita Baru';
+      document.getElementById('btnCancelEdit').style.display = 'none';
+      editBeritaId = null;
+    }
+
+    // Pasang event listener untuk edit dan hapus berita
+    function setBeritaActionListeners() {
+      document.querySelectorAll('#tabelBerita .btnEdit').forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.getAttribute('data-id');
+          db.collection('berita').doc(id).get().then(doc => {
+            if (doc.exists) {
+              const data = doc.data();
+              document.getElementById('judul').value = data.judul;
+              document.getElementById('tanggal').value = data.tanggal;
+              document.getElementById('gambar').value = data.gambar || '';
+              document.getElementById('isi').value = data.isi;
+              document.getElementById('btnSubmit').textContent = 'Update Berita';
+              document.getElementById('formTitle').textContent = 'Edit Berita';
+              document.getElementById('btnCancelEdit').style.display = 'inline-block';
+              editBeritaId = id;
+              showSection(sectionBerita, btnBerita);
+            }
+          });
+        };
+      });
+      document.querySelectorAll('#tabelBerita .btnDelete').forEach(btn => {
+        btn.onclick = () => {
+          if (confirm('Yakin ingin menghapus berita ini?')) {
+            const id = btn.getAttribute('data-id');
+            db.collection('berita').doc(id).delete().then(() => {
+              alert('Berita berhasil dihapus.');
+              loadBerita();
+            });
+          }
+        };
+      });
+    }
+
+    // Cancel edit berita
+    document.getElementById('btnCancelEdit').addEventListener('click', () => {
+      resetBeritaForm();
     });
 
-    function renderBerita() {
-      tabelBody.innerHTML = '';
-      db.collection("berita").orderBy("tanggal", "desc").get().then(snapshot => {
-        snapshot.forEach(doc => {
-          const d = doc.data();
-          const row = document.createElement('tr');
-          row.innerHTML = `<td>${d.judul}</td><td>${d.tanggal}</td><td><button onclick="editBerita('${doc.id}')">Edit</button> <button onclick="hapusBerita('${doc.id}')">Hapus</button></td>`;
-          tabelBody.appendChild(row);
-        });
-      });
-    }
+    // ----- KLASEMEN -----
 
-    window.editBerita = function(id) {
-      db.collection("berita").doc(id).get().then(doc => {
-        if (doc.exists) {
-          const d = doc.data();
-          judulInput.value = d.judul;
-          tanggalInput.value = d.tanggal;
-          gambarInput.value = d.gambar;
-          isiInput.value = d.isi;
-          editId = id;
-          btnSubmit.textContent = 'Update Berita';
-          btnCancelEdit.style.display = 'inline-block';
-        }
-      });
-    }
+    let editKlasemenId = null;
 
-    window.hapusBerita = function(id) {
-      if (confirm('Hapus berita ini?')) {
-        db.collection("berita").doc(id).delete().then(() => {
-          alert('Berita dihapus.');
-          renderBerita();
-        });
-      }
-    }
-
-    btnTambahKlasemen.addEventListener('click', () => {
-      const klub = klubInput.value.trim();
-      const main = parseInt(mainInput.value);
-      const menang = parseInt(menangInput.value);
-      const seri = parseInt(seriInput.value);
-      const kalah = parseInt(kalahInput.value);
-      const poin = parseInt(poinInput.value);
-      if (!klub || isNaN(main) || isNaN(menang) || isNaN(seri) || isNaN(kalah) || isNaN(poin)) return alert('Semua field wajib diisi!');
-      db.collection("klasemen").add({ klub, main, menang, seri, kalah, poin }).then(() => {
-        alert('Klasemen ditambahkan!');
-        klubInput.value = mainInput.value = menangInput.value = seriInput.value = kalahInput.value = poinInput.value = '';
-        renderKlasemen();
-      });
-    });
-
-    function renderKlasemen() {
-      klasemenBody.innerHTML = '';
-      db.collection("klasemen").orderBy("poin", "desc").get().then(snapshot => {
+    // Load klasemen dari Firestore
+    function loadKlasemen() {
+      const tbody = document.querySelector('#tabelKlasemen tbody');
+      tbody.innerHTML = '';
+      db.collection('klasemen').orderBy('poin', 'desc').get().then(snapshot => {
         let posisi = 1;
         snapshot.forEach(doc => {
-          const d = doc.data();
-          const row = document.createElement('tr');
-          row.innerHTML = `<td>${posisi++}</td><td>${d.klub}</td><td>${d.main}</td><td>${d.menang}</td><td>${d.seri}</td><td>${d.kalah}</td><td>${d.poin}</td><td><button onclick="hapusKlasemen('${doc.id}')">Hapus</button></td>`;
-          klasemenBody.appendChild(row);
+          const data = doc.data();
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${posisi++}</td>
+            <td>${data.klub}</td>
+            <td>${data.main}</td>
+            <td>${data.menang}</td>
+            <td>${data.seri}</td>
+            <td>${data.kalah}</td>
+            <td>${data.poin}</td>
+            <td>
+              <button class="btnEdit" data-id="${doc.id}">Edit</button>
+              <button class="btnDelete" data-id="${doc.id}">Hapus</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
         });
+        setKlasemenActionListeners();
       });
     }
 
-    window.hapusKlasemen = function(id) {
-      if (confirm('Hapus data klasemen ini?')) {
-        db.collection("klasemen").doc(id).delete().then(() => {
-          alert('Data klasemen dihapus.');
-          renderKlasemen();
+    // Submit tambah/edit klasemen
+    document.getElementById('formTambahKlasemen').addEventListener('submit', e => {
+      e.preventDefault();
+      const klub = document.getElementById('klub').value.trim();
+      const main = parseInt(document.getElementById('main').value);
+      const menang = parseInt(document.getElementById('menang').value);
+      const seri = parseInt(document.getElementById('seri').value);
+      const kalah = parseInt(document.getElementById('kalah').value);
+      const poin = parseInt(document.getElementById('poin').value);
+
+      if (!klub || isNaN(main) || isNaN(menang) || isNaN(seri) || isNaN(kalah) || isNaN(poin)) {
+        alert('Semua field harus diisi dengan benar!');
+        return;
+      }
+
+      const data = { klub, main, menang, seri, kalah, poin };
+
+      if (editKlasemenId) {
+        db.collection('klasemen').doc(editKlasemenId).update(data).then(() => {
+          alert('Klasemen berhasil diupdate.');
+          resetKlasemenForm();
+          loadKlasemen();
+        });
+      } else {
+        db.collection('klasemen').add(data).then(() => {
+          alert('Klasemen berhasil ditambahkan.');
+          resetKlasemenForm();
+          loadKlasemen();
         });
       }
+    });
+
+    // Reset form klasemen
+    function resetKlasemenForm() {
+      document.getElementById('klub').value = '';
+      document.getElementById('main').value = '';
+      document.getElementById('menang').value = '';
+      document.getElementById('seri').value = '';
+      document.getElementById('kalah').value = '';
+      document.getElementById('poin').value = '';
+      editKlasemenId = null;
+      document.getElementById('btnTambahKlasemen').textContent = 'Tambah Klasemen';
+    }
+
+    // Edit & hapus klasemen listener
+    function setKlasemenActionListeners() {
+      document.querySelectorAll('#tabelKlasemen .btnEdit').forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.getAttribute('data-id');
+          db.collection('klasemen').doc(id).get().then(doc => {
+            if (doc.exists) {
+              const data = doc.data();
+              document.getElementById('klub').value = data.klub;
+              document.getElementById('main').value = data.main;
+              document.getElementById('menang').value = data.menang;
+              document.getElementById('seri').value = data.seri;
+              document.getElementById('kalah').value = data.kalah;
+              document.getElementById('poin').value = data.poin;
+              document.getElementById('btnTambahKlasemen').textContent = 'Update Klasemen';
+              editKlasemenId = id;
+              showSection(sectionKlasemen, btnKlasemen);
+            }
+          });
+        };
+      });
+      document.querySelectorAll('#tabelKlasemen .btnDelete').forEach(btn => {
+        btn.onclick = () => {
+          if (confirm('Yakin ingin menghapus data klasemen ini?')) {
+            const id = btn.getAttribute('data-id');
+            db.collection('klasemen').doc(id).delete().then(() => {
+              alert('Data klasemen berhasil dihapus.');
+              loadKlasemen();
+            });
+          }
+        };
+      });
     }
   </script>
 </body>
