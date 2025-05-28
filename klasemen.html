@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SARJANABOLA - Klasemen Liga 1</title>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      background-color: #033b86;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .logo .title {
+      font-size: 28px;
+      letter-spacing: 2px;
+      font-weight: bold;
+    }
+    .logo .dot-style {
+      font-size: 16px;
+      color: #f15034;
+      margin-top: 5px;
+      letter-spacing: 5px;
+      font-weight: bold;
+    }
+    .logo .subtext {
+      font-size: 13px;
+      color: #fc7e14;
+      margin-top: 8px;
+    }
+
+    nav {
+      background: #444;
+      padding: 10px;
+      display: flex;
+      justify-content: flex-start;
+      gap: 20px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      white-space: nowrap;
+    }
+    nav::-webkit-scrollbar {
+      height: 6px;
+    }
+    nav::-webkit-scrollbar-thumb {
+      background-color: #25D366;
+      border-radius: 3px;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      min-width: max-content;
+    }
+    nav a i {
+      font-size: 16px;
+      margin-right: 6px;
+      flex-shrink: 0;
+      display: inline-block !important;
+    }
+    nav a:hover {
+      color: #25D366;
+    }
+
+    @media (min-width: 768px) {
+      nav {
+        justify-content: center;
+        overflow-x: visible;
+      }
+    }
+
+    main {
+      flex: 1;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+      padding-bottom: 70px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: white;
+      table-layout: fixed;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    thead th {
+      background: #033b86;
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    /* Sticky kolom Pos dan Klub kiri */
+    th.pos, td.pos {
+      position: sticky;
+      left: 0;
+      background: #033b86;
+      color: white;
+      z-index: 9;
+      min-width: 40px;
+    }
+    th.klub, td.klub {
+      position: sticky;
+      left: 40px;
+      background: #033b86;
+      color: white;
+      z-index: 9;
+      min-width: 140px;
+      text-align: left;
+      padding-left: 10px;
+    }
+
+    /* Sticky kolom Poin kanan */
+    th.poin, td.poin {
+      position: sticky;
+      right: 0;
+      background: #033b86;
+      color: white;
+      z-index: 9;
+      min-width: 50px;
+    }
+
+    /* Semua kolom lain scrollable */
+    /* beri warna berbeda agar mudah dibedakan */
+    th, td {
+      background: white;
+    }
+    /* Override background untuk sticky kolom */
+    th.pos, td.pos,
+    th.klub, td.klub,
+    th.poin, td.poin {
+      background: #033b86;
+      color: white;
+    }
+
+    /* Hover baris */
+    tbody tr:hover {
+      background: #e0f7fa;
+    }
+
+    /* Wrapper untuk scroll horizontal */
+    .table-wrapper {
+      overflow-x: auto;
+      margin-top: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    footer {
+      background: #444;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      z-index: 100;
+    }
+  </style>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCm3bqo01GU4EnYDnUjy7rhzkY3teHMNpY",
+      authDomain: "sarjanabola-980e4.firebaseapp.com",
+      projectId: "sarjanabola-980e4",
+      storageBucket: "sarjanabola-980e4.appspot.com",
+      messagingSenderId: "834425792870",
+      appId: "1:834425792870:web:e865ba0a526d20f06e40a7",
+      measurementId: "G-Q36V68S5NM"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function fetchKlasemen() {
+      const klasemenTable = document.getElementById('klasemen-table');
+      const querySnapshot = await getDocs(collection(db, "klasemen"));
+      const dataArray = [];
+
+      querySnapshot.forEach(doc => {
+        dataArray.push(doc.data());
+      });
+
+      // Urutkan berdasarkan poin dari besar ke kecil
+      dataArray.sort((a, b) => b.poin - a.poin);
+
+      let rows = "";
+      dataArray.forEach((data, index) => {
+        rows += `
+          <tr>
+            <td class="pos">${index + 1}</td>
+            <td class="klub">${data.klub}</td>
+            <td>${data.main}</td>
+            <td>${data.menang}</td>
+            <td>${data.seri}</td>
+            <td>${data.kalah}</td>
+            <td>${data.gm}</td>
+            <td>${data.gk}</td>
+            <td>${data.Gk}</td>
+            <td class="poin">${data.poin}</td>
+          </tr>`;
+      });
+
+      klasemenTable.innerHTML = `
+        <thead>
+          <tr>
+            <th class="pos">Pos</th>
+            <th class="klub">Klub</th>
+            <th>Main</th>
+            <th>Menang</th>
+            <th>Seri</th>
+            <th>Kalah</th>
+            <th>gm</th>
+            <th>gk</th>
+            <th>Gk</th>
+            <th class="poin">Poin</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchKlasemen();
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="title">SARJANA BOLA ID</div>
+      <div class="dot-style">EAST 2023</div>
+      <div class="subtext">Berita Informasi Sepakbola Terkini</div>
+    </div>
+  </header>
+  <nav>
+    <a href="index.html"><i class="fas fa-home"></i> Home</a>
+    <a href="liga1.html"><i class="fas fa-futbol"></i> Liga 1</a>
+    <a href="klasemen.html"><i class="fas fa-table"></i> Klasemen</a>
+    <a href="https://instagram.com/b" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>
+    <a href="https://www.facebook.com/Sarjanabola.id" target="_blank"><i class="fab fa-facebook"></i> Facebook</a>
+  </nav>
+  <main>
+    <div class="table-wrapper">
+      <table id="klasemen-table"></table>
+    </div>
+  </main>
+  <footer>
+    &copy; SARJANA BOLA ID EAST 2023
+  </footer>
+</body>
+</html>
