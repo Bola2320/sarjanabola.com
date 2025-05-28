@@ -157,6 +157,8 @@
           <input type="number" id="menang" placeholder="Menang" required />
           <input type="number" id="seri" placeholder="Seri" required />
           <input type="number" id="kalah" placeholder="Kalah" required />
+          <input type="number" id="gm" placeholder="Gol Masuk (GM)" required />
+          <input type="number" id="gk" placeholder="Gol Kemasukan (GK)" required />
           <input type="number" id="poin" placeholder="Poin" required />
           <button type="submit" id="btnTambahKlasemen">Tambah Klasemen</button>
         </form>
@@ -243,6 +245,8 @@
     const menangInput = document.getElementById('menang');
     const seriInput = document.getElementById('seri');
     const kalahInput = document.getElementById('kalah');
+    const gm = parseInt(document.getElementById('gm').value);
+    const gk = parseInt(document.getElementById('gk').value);
     const poinInput = document.getElementById('poin');
     const btnTambahKlasemen = document.getElementById('btnTambahKlasemen');
 
@@ -498,9 +502,11 @@
       const menang = parseInt(menangInput.value);
       const seri = parseInt(seriInput.value);
       const kalah = parseInt(kalahInput.value);
+      const gm = parseInt(gmInput.value);
+      const gk = parseInt(gkInput.value);
       const poin = parseInt(poinInput.value);
 
-      if (!klub || isNaN(main) || isNaN(menang) || isNaN(seri) || isNaN(kalah) || isNaN(poin)) {
+      if (!klub || isNaN(main) || isNaN(menang) || isNaN(seri) || isNaN(kalah) || isNaN(gm) || isNaN(gk) || isNaN(poin)) {
         alert('Semua kolom harus diisi dengan benar!');
         return;
       }
@@ -509,7 +515,7 @@
         if (editKlasemenId) {
           // Update klasemen
           await db.collection('klasemen').doc(editKlasemenId).update({
-            klub, main, menang, seri, kalah, poin
+            klub, main, menang, seri, kalah, gm, gk, poin
           });
           alert('Data klasemen berhasil diupdate!');
           editKlasemenId = null;
@@ -517,7 +523,7 @@
         } else {
           // Tambah klasemen baru
           await db.collection('klasemen').add({
-            klub, main, menang, seri, kalah, poin,
+            klub, main, menang, seri, kalah,gm, gk, poin,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           });
           alert('Data klasemen berhasil ditambahkan!');
@@ -550,6 +556,8 @@
             <td>${data.menang}</td>
             <td>${data.seri}</td>
             <td>${data.kalah}</td>
+            <td>${data.gm}</td>
+            <td>${data.gk}</td>
             <td>${data.poin}</td>
             <td>
               <button class="btnEdit" data-id="${doc.id}">Edit</button>
@@ -580,6 +588,8 @@
             menangInput.value = data.menang;
             seriInput.value = data.seri;
             kalahInput.value = data.kalah;
+            gmInput.value = data.gm;
+            gkInput.value = data.gk;
             poinInput.value = data.poin;
             btnTambahKlasemen.textContent = 'Update Klasemen';
             editKlasemenId = id;
